@@ -5,30 +5,35 @@ def write_hif(G, path):
     pass
 
 def add_incidence(G: nx.Graph, incidence):
+    attrs = incidence.get("attrs", {})
     edge_id = incidence["edge"]
     node_id = incidence["node"]
+    if "weight" in incidence:
+        attrs["weight"] = incidence["weight"]
+    if "direction" in incidence:
+        attrs["direction"] = incidence["direction"]
     G.add_node(edge_id, bipartite=1)
     G.add_node(node_id, bipartite=0)
-    G.add_edge(edge_id, node_id)
+    G.add_edge(edge_id, node_id, **attrs)
 
 def add_edge(G: nx.Graph, edge):
-    attrs = edge.get("attr", {})
+    attrs = edge.get("attrs", {})
     edge_id = edge["edge"]
-    if "weigth" in edge:
-        attrs["weigth"] = edge["weigth"]
+    if "weight" in edge:
+        attrs["weight"] = edge["weight"]
+    if not G.has_node(edge_id):
+        G.add_node(edge_id, bipartite=1)
     for attr_key, attr_value in attrs.items():
-        if not G.has_node(edge_id):
-            G.add_node(edge_id, bipartite=1)
         G.nodes[edge_id][attr_key] = attr_value
 
 def add_node(G: nx.Graph, node):
-    attrs = node.get("attr", {})
+    attrs = node.get("attrs", {})
     node_id = node["node"]
-    if "weigth" in node:
-        attrs["weigth"] = node["weigth"]
+    if "weight" in node:
+        attrs["weight"] = node["weight"]
+    if not G.has_node(node_id):
+        G.add_node(node_id, bipartite=0)
     for attr_key, attr_value in attrs.items():
-        if not G.has_node(node_id):
-            G.add_node(node_id, bipartite=0)
         G.nodes[node_id][attr_key] = attr_value
 
 def read_hif(path):
