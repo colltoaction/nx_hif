@@ -6,8 +6,8 @@ def write_hif(G, path):
 
 def add_incidence(G: nx.Graph, incidence):
     attrs = incidence.get("attrs", {})
-    edge_id = incidence["edge"]
-    node_id = incidence["node"]
+    edge_id = incidence["edge"], 1
+    node_id = incidence["node"], 0
     if "weight" in incidence:
         attrs["weight"] = incidence["weight"]
     if "direction" in incidence:
@@ -18,7 +18,7 @@ def add_incidence(G: nx.Graph, incidence):
 
 def add_edge(G: nx.Graph, edge):
     attrs = edge.get("attrs", {})
-    edge_id = edge["edge"]
+    edge_id = edge["edge"], 1
     if "weight" in edge:
         attrs["weight"] = edge["weight"]
     if not G.has_node(edge_id):
@@ -28,7 +28,7 @@ def add_edge(G: nx.Graph, edge):
 
 def add_node(G: nx.Graph, node):
     attrs = node.get("attrs", {})
-    node_id = node["node"]
+    node_id = node["node"], 0
     if "weight" in node:
         attrs["weight"] = node["weight"]
     if not G.has_node(node_id):
