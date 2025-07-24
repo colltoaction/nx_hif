@@ -11,7 +11,7 @@ def test_annihilate_erase_erase():
     assert len(inet) == 0
 
 
-def test_annihilate_construct_duplicate():
+def test_commute_construct_duplicate():
     inet = nx.Graph()
     u = inet_add_construct(inet)
     v = inet_add_duplicate(inet)
@@ -22,6 +22,6 @@ def test_annihilate_construct_duplicate():
     inet.add_edge(1, 2, index=0)
     inet.add_edge(1, 3, index=0)
 
-    annihilate_construct_duplicate(inet)
-    assert len(inet.nodes) == 2
+    commute_construct_duplicate(inet)
+    assert len(inet.nodes) == 12
     assert len(inet.edges) == 0
