@@ -34,29 +34,30 @@ def annihilate_erase_erase(inet: nx.MultiGraph):
 
 def commute_construct_duplicate(inet: nx.MultiGraph):
     active = []
-    for u, c, d in find_all_active_wires(inet):
-        tags = {"construct", "duplicate"}
-        found_tags = {inet.nodes[c]["tag"], inet.nodes[d]["tag"]}
-        if tags == found_tags:
-            active.append((u, c, d))
+    for u, x1, x2 in find_all_active_wires(inet):
+        if (inet.nodes[x1]["tag"], inet.nodes[x2]["tag"]) == ("construct", "duplicate"):
+            active.append((u, x1, x2))
+        if (inet.nodes[x1]["tag"], inet.nodes[x2]["tag"]) == ("duplicate", "construct"):
+            active.append((u, x2, x1))
 
     for u, c, d in active:
         c0 = inet_add_construct(inet)
         c1 = inet_add_construct(inet)
         d0 = inet_add_duplicate(inet)
         d1 = inet_add_duplicate(inet)
-        # rewire 2x2 secondary ports to 4 principals
-        inet_connect_ports(inet, (c0, 0), (d, 2))
-        inet_connect_ports(inet, (c1, 0), (d, 1))
-        inet_connect_ports(inet, (d0, 0), (c, 1))
-        inet_connect_ports(inet, (d1, 0), (c, 2))
-        inet.remove_edges_from(list(inet.edges(c)))
-        inet.remove_edges_from(list(inet.edges(d)))
         # wire secondary ports
         inet_connect_ports(inet, (c0, 1), (d0, 2))
         inet_connect_ports(inet, (c0, 2), (d1, 2))
         inet_connect_ports(inet, (c1, 1), (d0, 1))
         inet_connect_ports(inet, (c1, 2), (d1, 1))
+        # rewire 2x2 secondary ports to 4 principals
+        inet_replace_port(inet, (c0, 0), (d, 2))
+        inet_replace_port(inet, (c1, 0), (d, 1))
+        inet_replace_port(inet, (d0, 0), (c, 2))
+        inet_replace_port(inet, (d1, 0), (c, 1))
+        # isolate old combinators
+        inet.remove_edges_from(list(inet.edges(c, keys=True)))
+        inet.remove_edges_from(list(inet.edges(d, keys=True)))
 
 def inet_add_erase(inet: nx.MultiGraph):
     n = inet.number_of_nodes()
@@ -105,3 +106,12 @@ def inet_connect_ports(inet: nx.MultiGraph, p0, p1):
     inet.add_edge(w, u0, key=i0)
     inet.add_edge(w, u1, key=i1)
     return w
+
+def inet_replace_port(inet: nx.MultiGraph, p0, p1):
+    u0, i0 = p0
+    u1, i1 = p1
+    w0 = inet_find_wire(inet, u0, i0)
+    w1 = inet_find_wire(inet, u1, i1)
+    inet.remove_edge(u0, w0, key=i0)
+    inet.remove_edge(u1, w1, key=i1)
+    inet.add_edge(u0, w1, key=i0)
