@@ -16,9 +16,7 @@ def find_all_active_wires(inet: nx.MultiGraph):
             # u connects two combinators
             if len(inet[u]) == 2:
                 c1, c2 = inet[u]
-                print(inet[u])
-                print(c1, c2)
-                # u connects two principal ports
+                # u connects two principal ports at index 0
                 if c1 != c2 and \
                     0 in inet[u][c1] and \
                     0 in inet[u][c2]:
@@ -28,14 +26,10 @@ def find_all_active_wires(inet: nx.MultiGraph):
 def annihilate_erase_erase(inet: nx.MultiGraph):
     active = []
     for u, c1, c2 in find_all_active_wires(inet):
-        print(u, c1, c2)
-        # erase-erase annihilation
         if inet.nodes[c1]["tag"] == "erase" and \
             inet.nodes[c2]["tag"] == "erase":
             active.append([u, c1, 0])
             active.append([u, c2, 0])
-    # TODO we never remove nodes to ensure increasing IDs
-    print(active)
     inet.remove_edges_from(active)
 
 def commute_construct_duplicate(inet: nx.MultiGraph):
@@ -56,7 +50,8 @@ def commute_construct_duplicate(inet: nx.MultiGraph):
         inet_connect_ports(inet, (c1, 0), (d, 1))
         inet_connect_ports(inet, (d0, 0), (c, 1))
         inet_connect_ports(inet, (d1, 0), (c, 2))
-        # inet.remove_node(u)
+        inet.remove_edges_from(list(inet.edges(c)))
+        inet.remove_edges_from(list(inet.edges(d)))
         # wire secondary ports
         inet_connect_ports(inet, (c0, 1), (d0, 2))
         inet_connect_ports(inet, (c0, 2), (d1, 2))
@@ -96,18 +91,13 @@ def inet_find_wire(inet: nx.MultiGraph, u, i):
     for w0, w1, j in inet.edges(u, keys=True):
         if i == j:
             return w1 if u == w0 else w0
-    print(inet.nodes(data=True))
-    print(inet.edges(u, keys=True))
     assert False
 
 def inet_connect_ports(inet: nx.MultiGraph, p0, p1):
     u0, i0 = p0
     u1, i1 = p1
     w0 = inet_find_wire(inet, u0, i0)
-    # assert len(inet[w0]) == 1
     w1 = inet_find_wire(inet, u1, i1)
-    # assert len(inet[w1]) == 1
-    # TODO we never remove nodes to ensure increasing IDs
     inet.remove_edge(u0, w0)
     inet.remove_edge(u1, w1)
     w = inet.number_of_nodes()
