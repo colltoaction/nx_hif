@@ -13,106 +13,99 @@ import itertools
 import networkx as nx
 
 
-def dpo_production(G, L, R, K, d):
+def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph):
     """
-    A graph transformation rule.
-    A production in the doublepushout approach is usually de ned as a span ie a pair of graph morphisms with common source In the formal de nition that follows a production is de ned instead as a structure p L l K r R where l and r are the usual two morphisms and the additional component p is the production name.
-    a pair L l K r Rof graph homomorphisms from a common interface graph Kand adirect derivation consists of two gluing diagrams of graphs and total graph morphisms"""
-
-def dpo_match(G: nx.MultiDiGraph, L: nx.MultiDiGraph):
+    To rewrite 𝐺 into 𝐻 we compute the object 𝐶 for the
+    pushout complement 𝐾 −→ 𝐶 −→ 𝐺 of 𝐾 −→ 𝐿 −𝑚→ 𝐺.
+    𝐶 holds the part of 𝐺 that isn't matched by 𝑚,
+    so we form the the span 𝐶 ←− 𝐾 −→ 𝑅,
+    and obtain 𝐻 as the pushout.
     """
-    Occurrences of the lefthand side of a production in a graph.
-    A match m:LtoG for a production p is a graph homomorphism mapping nodes and edges of L to G in such a way that the graphical structure and the labels are preserved.
-    This subgraph matching algorithm is naive and prohibitive in general."""
-    G_labels = nx.MultiDiGraph((n for n, d in G.nodes(data=True) if d["bipartite"] == 0))
-    L_labels = nx.MultiDiGraph((n for n, d in L.nodes(data=True) if d["bipartite"] == 0))
-    itertools.combinations((d["bipartite"], d["node"]) for n, d in L_labels.nodes(data=True))
-    # all subgraphs of G matching L_labels
-    # then isomorphism but with same number of nodes and label counts
+    # Rule authors will tag their L and R boundary wires.
+    K = dpo_invariant(L, R)
 
-    # in the case of inets we know we have an active/inactive state for wires (nodes)
-    # and how to obtain the two adjacent combinators (edges).
-    if L_labels.nodes not in G_labels.nodes:
-        return
-
-    # TODO self loop would first need to account for the interface
-    # because it becomes two wires (nodes) in the subgraph
+    # To find a match we first have to remove the boundary nodes from L.
+    # This is necessary to use isomorphism in cases such as self-loops.
+    L.remove_nodes_from(l for l, d in K.nodes if d["bipartite"] == 0)
     matcher = nx.isomorphism.MultiDiGraphMatcher(
         G, L,
         lambda n1, n2:
             n1["bipartite"] == n2["bipartite"] == 0 or
             (n1["bipartite"] == n2["bipartite"] == 1 and n1["tag"] == n2["tag"]),
         lambda _a, _b: True)
-    # return match, replacement, boundary
 
-
-
-def inet_find_wire(inet: nx.MultiDiGraph, comb, port):
-    """
-    We use the bipartite attribute, directedness, key and label to build
-    a unique node id for a new graph.
-    """
-    assert inet.nodes[comb]["bipartite"] == 1
-    if port == 0:
-        for _, w1, _ in inet.out_edges(comb, keys=True):
-            return w1
-        assert False
-
-    for w1, _, j in inet.in_edges(comb, keys=True):
-        if port == j:
-            return w1
-    assert False
-
-
-def dpo_morphism(G, H):
-    """Graph morphisms are needed to identify the match of a left-hand side of a rule in a (potentially larger) host graph. As we will see below, they are also required for other purposes, such as graph gluing and graph transformation rules."""
-
-def dpo_rule(L, K, R, KtoR):
-    """rule applications"""
-
-def dpo_embedding(G, pL, K):
-    """rule applications"""
-
-def dpo_context(G, pL, K):
-    """rule applications"""
-
-def dpo_derivation(G, pL, pR, m):
-    """rule applications, the systems computations"""
-
-def dpo_pushout():
-    """a pushout is a sort of generalized union that speci es how to merge together two states having a common substate """
-
-def dpo_model_of_computation():
-    """d an adequate notion of equivalence on graphs and derivations that provides representation independence as well as abstraction of the order of independent concurrent derivation step"""
-
-def dpo_grammar(P, G0):
-    """ A graph grammar G is a pair G hp L l K r Rp PG0i where the rst component is a family of productions indexed by production names in P and G0 is the start graph c"""
-
-def inet_merge_many_wires(G: nx.MultiDiGraph, ws):
-    w = G.number_of_nodes()
-    G.add_node(w, bipartite=0)
-    for w0 in ws:
-        G.add_edges_from(list((y, w, z, d) for y, _, z, d in G.in_edges(w0, data=True, keys=True)))
-        G.add_edges_from(list((w, y, z, d) for _, y, z, d in G.out_edges(w0, data=True, keys=True)))
-        G.remove_edges_from(list(G.in_edges(w0, keys=True)))
-        G.remove_edges_from(list(G.out_edges(w0, keys=True)))
-    return w
-
-def inet_rewrite(G: nx.MultiDiGraph, rule):
-    """
-    A DPO rule consists of three graphs
-    specifying what to extract, what to plug in,
-    and how to respect some interfaces.
-    The ifaces is not HIF.
-    """
-    match, replacement, ifaces = rule
-    G.add_edges_from(list(replacement.in_edges(data=True, keys=True)))
-    G.add_edges_from(list(replacement.out_edges(data=True, keys=True)))
-    G.add_nodes_from(list(replacement.nodes(data=True)))
-    G.remove_edges_from(list(match.in_edges(keys=True, data=True)))
-    G.remove_edges_from(list(match.out_edges(keys=True, data=True)))
-    ccs = nx.connected_components(nx.to_undirected(ifaces))
-    for cc in ccs:
-        if len(cc) > 1:
-            inet_merge_many_wires(G, cc)
+    for iso in matcher.subgraph_isomorphisms_iter():
+        # each boundary wire has exactly one edge.
+        # the other end is a hyperedge with port that is part of the isomorphic subgraph,
+        # with translation G-->L.
+        # from L
+        for port in K.in_edges:
+            iso[L[port]]
+        # to R
+        for port in K.out_edges:
+            R[iso[port]]
+ 
+        # TODO We reattach R removing its boundary,
+        # and replacing each old edge from the boundary wire to a port
+        # with a similar edge from the inner boundary to the port.
+        # when tagging the inner boundary we might have multiple tags for one wire, self loop
+        C = nx.MultiDiGraph(G)
+        C.remove_nodes_from(iso)
+        # We obtain 𝐻 from the pushout of 𝐶 ←− 𝐾 −→ 𝑅.
+        C.add_edges_from(list(R.in_edges(data=True, keys=True)))
+        C.add_edges_from(list(R.out_edges(data=True, keys=True)))
+        C.add_nodes_from(list(R.nodes(data=True)))
+        C.remove_edges_from(list(C.in_edges(keys=True, data=True)))
+        C.remove_edges_from(list(C.out_edges(keys=True, data=True)))
+        return C
     return G
+
+def dpo_invariant(L, R):
+    """
+    The invariant subgraph 𝐾 is upgraded from a discrete hypergraph
+    consisting of the inputs and the outputs of the two sides of the rule,
+    to a mapping between L and R boundary nodes.
+    """
+    K = nx.MultiDiGraph()
+    L_boundary = sorted(
+        ((k, d) for k, d in L.nodes(data=True)
+         if d["bipartite"] == 0 and "tag" in d),
+        key=lambda d: d[1]["tag"])
+    R_boundary = sorted(
+        ((k, d) for k, d in R.nodes(data=True)
+         if d["bipartite"] == 0 and "tag" in d),
+        key=lambda d: d[1]["tag"])
+    assert len(L_boundary) == len(R_boundary)
+
+    for i, (l, r) in enumerate(zip(L_boundary, R_boundary)):
+        K.add_edge((l[0], "left"), i, key=0)
+        K.add_edge(i, (r[0], "right"), key=0)
+    return K
+    
+    # TODO check data for tags
+    for l, d in L.nodes(data=True):
+        if d["bipartite"] == 0:
+            if L.in_degree[l] + L.out_degree[l] == 1:
+                if L.in_degree[l] == 1:
+                    [(y, _, z, de)] = L.in_edges(l, data=True, keys=True)
+                    K.add_node(y, **d)
+                    K.add_edge(y, l, z, **de)
+                if L.out_degree[l] == 1:
+                    [(_, y, z, de)] = L.out_edges(l, data=True, keys=True)
+                    K.add_node(y, **d)
+                    K.add_edge(y, l, z, **de)
+    for r, d in R.nodes(data=True):
+        if d["bipartite"] == 0:
+            if R.in_degree[r] + R.out_degree[r] == 1:
+                if R.in_degree[r] == 1:
+                    [(y, _, z, de)] = R.in_edges(r, data=True, keys=True)
+                    K.add_node(y, **d)
+                    K.add_edge(y, r, z, **de)
+                if R.out_degree[r] == 1:
+                    [(_, y, z, de)] = R.out_edges(r, data=True, keys=True)
+                    K.add_node(y, **d)
+                    K.add_edge(y, r, z, **de)
+    # for k, d in K.nodes(data=True):
+    #     if d["bipartite"] == 0:
+    #         assert K.in_degree[k] == 1 and K.out_degree[k] == 1
+    return K
