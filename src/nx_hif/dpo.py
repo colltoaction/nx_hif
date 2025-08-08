@@ -20,6 +20,8 @@ def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph, K: n
     so we form the the span 𝐶 ←− 𝐾 −→ 𝑅,
     and obtain 𝐻 as the pushout.
     """
+    (L, L_boundary) = L
+    (R, R_boundary) = R
     # we first relabel to simplify further transformations
     G = nx.convert_node_labels_to_integers(G)
     L_sub = nx.MultiDiGraph(L)
@@ -40,17 +42,17 @@ def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph, K: n
             (n1["bipartite"] == n2["bipartite"] == 1 and n1["tag"] == n2["tag"]),
         lambda _a, _b: True)
 
-    C = nx.MultiDiGraph(G)
-    n = C.number_of_nodes()
-    # shift all R ids by n
-    R_mapping = {r: r+n for r in R_sub.nodes()}
-    R_sub = nx.relabel_nodes(R_sub, R_mapping)
-    C.update(R_sub)
-
     # for each of those edges, after removing the iso,
     # we connect C_inner to R_sub.
     # but the iso doesn't give an ordering.
+    C = nx.MultiDiGraph(G)
     for iso in matcher.subgraph_isomorphisms_iter():
+        n = C.number_of_nodes()
+        # shift all R ids by n
+        R_mapping = {r: r+n for r in R_sub.nodes()}
+        R_sub = nx.relabel_nodes(R_sub, R_mapping)
+        C.update(R_sub)
+
         for k1 in K.nodes:
             if K.nodes[k1]["bipartite"] == 1:
                 wire_boundary_i = k1
@@ -111,17 +113,15 @@ def dpo_invariant(L, R):
     to a mapping between L and R boundary nodes.
     """
     K = nx.MultiDiGraph()
-    L_boundary = sorted(
-        ((k, d) for k, d in L.nodes(data=True)
-         if d["bipartite"] == 0 and "tag" in d),
-        key=lambda d: d[1]["tag"])
-    R_boundary = sorted(
-        ((k, d) for k, d in R.nodes(data=True)
-         if d["bipartite"] == 0 and "tag" in d),
-        key=lambda d: d[1]["tag"])
-    assert len(L_boundary) == len(R_boundary)
+    (L, L_boundary) = L
+    (R, R_boundary) = R
+    assert len(L_boundary.edges) == len(R_boundary.edges)
 
-    for i, (l, r) in enumerate(zip(L_boundary, R_boundary)):
+    for i in range(len(L_boundary.edges)):
+        (l, ) = L_boundary[i]
+        l = l, L.nodes[l]
+        (r, ) = R_boundary[i]
+        r = r, R.nodes[r]
         K.add_node(i, bipartite=1)
         K.add_node((l[0], "left"), **l[1])
         K.add_node((r[0], "right"), **r[1])
