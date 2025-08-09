@@ -135,10 +135,10 @@ def inet_concon_rule_R():
     B.add_node(2, bipartite=1)
     B.add_node(3, bipartite=1)
     # TODO no key
-    B.add_edge(0, 0)
-    B.add_edge(1, 1)
-    B.add_edge(2, 1)
-    B.add_edge(3, 0)
+    B.add_edge(0, 0, 40)
+    B.add_edge(1, 1, 41)
+    B.add_edge(2, 1, 42)
+    B.add_edge(3, 0, 43)
     return R, B
 
 
