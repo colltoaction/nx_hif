@@ -45,10 +45,10 @@ def inet_condup_rule_L():
     B.add_node(1, bipartite=1)
     B.add_node(2, bipartite=1)
     B.add_node(3, bipartite=1)
-    B.add_edge(0, 3)
-    B.add_edge(1, 4)
-    B.add_edge(2, 5)
-    B.add_edge(3, 6)
+    B.add_edge(0, 3, key=1)
+    B.add_edge(1, 4, key=2)
+    B.add_edge(2, 5, key=1)
+    B.add_edge(3, 6, key=2)
     return L, B
 
 def inet_condup_rule_R():
@@ -82,10 +82,10 @@ def inet_condup_rule_R():
     B.add_node(1, bipartite=1)
     B.add_node(2, bipartite=1)
     B.add_node(3, bipartite=1)
-    B.add_edge(0, 4)
-    B.add_edge(1, 5)
-    B.add_edge(2, 10)
-    B.add_edge(3, 11)
+    B.add_edge(0, 4, key=0)
+    B.add_edge(1, 5, key=0)
+    B.add_edge(2, 10, key=0)
+    B.add_edge(3, 11, key=0)
     return R, B
 
 def inet_concon_rule_L():
@@ -108,10 +108,10 @@ def inet_concon_rule_L():
     B.add_node(1, bipartite=1)
     B.add_node(2, bipartite=1)
     B.add_node(3, bipartite=1)
-    B.add_edge(0, 3)
-    B.add_edge(1, 4)
-    B.add_edge(2, 5)
-    B.add_edge(3, 6)
+    B.add_edge(0, 3, key=1)
+    B.add_edge(1, 4, key=2)
+    B.add_edge(2, 5, key=1)
+    B.add_edge(3, 6, key=2)
     return L, B
 
 def inet_concon_rule_R():
@@ -134,6 +134,7 @@ def inet_concon_rule_R():
     B.add_node(1, bipartite=1)
     B.add_node(2, bipartite=1)
     B.add_node(3, bipartite=1)
+    # TODO no key
     B.add_edge(0, 0)
     B.add_edge(1, 1)
     B.add_edge(2, 1)
