@@ -145,13 +145,13 @@ def inet_concon_rule_R():
 def test_condup():
     L = inet_condup_rule_L()
     R = inet_condup_rule_R()
-    K = dpo_invariant(L, R)
     G = inet_franchu()
+    K = dpo_invariant(G, L, R)
     G = dpo_rewrite(G, L, R, K)
     assert len(G.edges) == 16
 
     L = inet_concon_rule_L()
-    RB = inet_concon_rule_R()
-    K = dpo_invariant(L, RB)
-    G = dpo_rewrite(G, L, RB, K)
-    assert len(G.edges) == 16
+    R = inet_concon_rule_R()
+    K = dpo_invariant(G, L, R)
+    G = dpo_rewrite(G, L, R, K)
+    assert len(G.edges) == 10

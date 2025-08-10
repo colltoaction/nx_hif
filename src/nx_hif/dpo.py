@@ -27,14 +27,11 @@ def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph, K: n
     # TODO remove from boundary
     L_sub = nx.MultiDiGraph(L)
     L_sub.remove_nodes_from(
-        x[0][0] for y, yd in K.nodes(data=True)
-        if yd["bipartite"] == 0
-        for x in K.out_edges(y, keys=True, data=True))
+        x[1] for x in L_boundary.out_edges(keys=True, data=True))
     R_sub = nx.MultiDiGraph(R)
     R_sub.remove_nodes_from(
-        x[1][0] for y, yd in K.nodes(data=True)
-        if yd["bipartite"] == 0
-        for x in K.in_edges(y, keys=True, data=True))
+        x[1] for x in R_boundary.out_edges(keys=True, data=True)
+        if R.in_degree[x[1]] + R.out_degree[x[1]] > 0)
 
     matcher = nx.isomorphism.MultiDiGraphMatcher(
         G, L_sub,
@@ -110,58 +107,40 @@ def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph, K: n
             # 1. 0 edges is passthrough L to R
             # 2. 1 edge L to C
             # 3. 1 edge C to R
-            # for (r_sub_i, _, k, d) in R.in_edges(right_wire, keys=True, data=True):
-            #     # shift
-            #     r_sub_i += n
-            #     print("addin", r_sub_i, c_bound_i, k, rk, d)
-            #     C.add_edge(r_sub_i, c_bound_i, k, **d)
-            # for (_, r_sub_i, k, d) in R.out_edges(right_wire, keys=True, data=True):
-            #     # shift
-            #     r_sub_i += n
-            #     print("addout", c_bound_i, r_sub_i, k, d)
-            #     C.add_edge(c_bound_i, r_sub_i, k, **d)
-            # for e in R_boundary.in_edges(right_wire, keys=True, data=True):
-            #     print("R_boundary.in_edges", e)
-            #     # C.add_edge(i, (right_wire, "right"), key=e[2])
-
-
             if R.in_degree[right_wire] == 1:
                 [(r_sub_i, _, k, d)] = R.in_edges(right_wire, keys=True, data=True)
                 # shift
                 r_sub_i += n
-                print("addin", r_sub_i, c_bound_i, k, rk, lk, d)
-                C.add_edge(r_sub_i, c_bound_i, lk, **d)
+                C.add_edge(r_sub_i, c_bound_i, k, **d)
             elif R.out_degree[right_wire] == 1:
                 [(_, r_sub_i, k, d)] = R.out_edges(right_wire, keys=True, data=True)
                 # shift
                 r_sub_i += n
-                print("addout", c_bound_i, r_sub_i, k, d)
-                C.add_edge(c_bound_i, r_sub_i, lk, **d)
+                C.add_edge(c_bound_i, r_sub_i, k, **d)
             else:
                 assert R.in_degree[right_wire] == R.out_degree[right_wire] == 0
                 assert len(R_boundary.in_edges(right_wire, keys=True, data=True)) == 2
                 if c_bound_i is not None:
                     # contract wires c_bound_i and r
-                    print(iso)
-                    # print(c_bound_i, C.nodes[c_bound_i])
+                    assert C.has_node(c_bound_i)
+                    assert C.has_node(right_wire+n)
+                    # rk is a phony key
+                    # TODO only two duplicate wires missing
                     for a, _, k, d in G.in_edges(c_bound_i, keys=True, data=True):
-                        print(a, k, d)
-                        C.add_edge(a, right_wire, k, **d)
+                        # if k == lk:
+                        C.add_edge(a, right_wire+n, k, **d)
                     for _, a, k, d in G.out_edges(c_bound_i, keys=True, data=True):
-                        print(a, k, d)
-                        C.add_edge(right_wire, a, k, **d)
+                        C.add_edge(right_wire+n, a, k, **d)
+                        # if k == lk:
                     # isos will be removed later
                     c_bound_remove[c_bound_i] = right_wire
                     # C.remove_node(c_bound_i)
-                    # print(R_boundary.in_edges(wire_boundary_i, keys=True, data=True))
-                    # print(R_boundary.out_edges(wire_boundary_i, keys=True, data=True))
-                    # print(c_iso_i, C.nodes[c_iso_i])
-                    # print(C.in_edges(c_iso_i, keys=True, data=True))
-                    # print(C.out_edges(c_iso_i, keys=True, data=True))
                     # assert False
                 # TODO consider R_boundary because
                 # 
         C.remove_nodes_from(iso.keys())
+        # TODO handle multiple isos
+        break
     C.remove_nodes_from(c_bound_remove.keys())
     return C
 
