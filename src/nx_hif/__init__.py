@@ -12,10 +12,10 @@ def write_hif(G: nx.MultiDiGraph, path):
             incidence = {"direction": "tail", "edge": v, "node": u, "attrs": {"key": k}}
         incidences.append(incidence)
     for u, d in G.nodes(data=True):
-        if len(d) > 1:
-            a = d.copy()
-            del a["bipartite"]
-            if d["bipartite"] == 1:
+        a = d.copy()
+        b = a.pop("bipartite", 0)
+        if len(a) > 0 or G.in_degree[u] == G.out_degree[u] == 0:
+            if b == 1:
                 edge = {"edge": u, "attrs": a}
                 edges.append(edge)
             else:
@@ -27,14 +27,16 @@ def write_hif(G: nx.MultiDiGraph, path):
 
 def add_incidence(G: nx.MultiDiGraph, incidence):
     attrs = incidence.get("attrs", {})
-    edge_id = incidence["edge"], 1
-    node_id = incidence["node"], 0
+    edge_id = incidence["edge"]
+    node_id = incidence["node"]
     if "weight" in incidence:
         attrs["weight"] = incidence["weight"]
     if "direction" in incidence:
         attrs["direction"] = incidence["direction"]
-    G.add_node(edge_id, bipartite=1)
-    G.add_node(node_id, bipartite=0)
+    if not G.has_node(edge_id):
+        G.add_node(edge_id, bipartite=1)
+    if not G.has_node(node_id):
+        G.add_node(node_id, bipartite=0)
     if incidence.get("direction") == "tail":
         G.add_edge(node_id, edge_id, **attrs)
     else:
@@ -42,7 +44,7 @@ def add_incidence(G: nx.MultiDiGraph, incidence):
 
 def add_edge(G: nx.MultiDiGraph, edge):
     attrs = edge.get("attrs", {})
-    edge_id = edge["edge"], 1
+    edge_id = edge["edge"]
     if "weight" in edge:
         attrs["weight"] = edge["weight"]
     if not G.has_node(edge_id):
@@ -52,7 +54,7 @@ def add_edge(G: nx.MultiDiGraph, edge):
 
 def add_node(G: nx.MultiDiGraph, node):
     attrs = node.get("attrs", {})
-    node_id = node["node"], 0
+    node_id = node["node"]
     if "weight" in node:
         attrs["weight"] = node["weight"]
     if not G.has_node(node_id):

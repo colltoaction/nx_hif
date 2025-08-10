@@ -1,0 +1,22 @@
+{
+  "incidences": [
+    {
+      "direction": "tail",
+      "edge": 3,
+      "node": 0,
+      "attrs": {
+        "key": 1
+      }
+    },
+    {
+      "direction": "tail",
+      "edge": 4,
+      "node": 1,
+      "attrs": {
+        "key": 2
+      }
+    }
+  ],
+  "edges": [],
+  "nodes": []
+}
