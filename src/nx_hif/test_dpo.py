@@ -88,6 +88,48 @@ def inet_condup_rule_R():
     B.add_edge(3, 11, key=0)
     return R, B
 
+def inet_dupdup_rule_L():
+    L = nx.MultiDiGraph()
+    L.add_node(0, bipartite=1, tag="duplicate")
+    L.add_node(1, bipartite=1, tag="duplicate")
+    L.add_node(2, bipartite=0)
+    L.add_node(3, bipartite=0, tag=0)
+    L.add_node(4, bipartite=0, tag=1)
+    L.add_node(5, bipartite=0, tag=2)
+    L.add_node(6, bipartite=0, tag=3)
+    L.add_edge(0, 2, key=0)
+    L.add_edge(3, 0, key=1)
+    L.add_edge(4, 0, key=2)
+    L.add_edge(1, 2, key=0)
+    L.add_edge(5, 1, key=1)
+    L.add_edge(6, 1, key=2)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_node(2, bipartite=1)
+    B.add_node(3, bipartite=1)
+    B.add_edge(0, 3, key=1)
+    B.add_edge(1, 4, key=2)
+    B.add_edge(2, 5, key=1)
+    B.add_edge(3, 6, key=2)
+    return L, B
+
+def inet_dupdup_rule_R():
+    R = nx.MultiDiGraph()
+    R.add_node(0, bipartite=0)
+    R.add_node(1, bipartite=0)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_node(2, bipartite=1)
+    B.add_node(3, bipartite=1)
+    # TODO no key
+    B.add_edge(0, 0, 40)
+    B.add_edge(1, 1, 41)
+    B.add_edge(2, 0, 42)
+    B.add_edge(3, 1, 43)
+    return R, B
+
 def inet_concon_rule_L():
     L = nx.MultiDiGraph()
     L.add_node(0, bipartite=1, tag="construct")
@@ -137,8 +179,93 @@ def inet_concon_rule_R():
     # TODO no key
     B.add_edge(0, 0, 40)
     B.add_edge(1, 1, 41)
-    B.add_edge(2, 1, 42)
-    B.add_edge(3, 0, 43)
+    B.add_edge(2, 0, 42)
+    B.add_edge(3, 1, 43)
+    return R, B
+
+def inet_eracon_rule_L():
+    L = nx.MultiDiGraph()
+    L.add_node(0, bipartite=1, tag="erase")
+    L.add_node(1, bipartite=1, tag="construct")
+    L.add_node(2, bipartite=0)
+    L.add_node(3, bipartite=0, tag=0)
+    L.add_node(4, bipartite=0, tag=1)
+    L.add_edge(0, 2, key=0)
+    L.add_edge(1, 2, key=0)
+    L.add_edge(3, 1, key=1)
+    L.add_edge(4, 1, key=2)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_edge(0, 3, key=1)
+    B.add_edge(1, 4, key=2)
+    return L, B
+
+def inet_eracon_rule_R():
+    R = nx.MultiDiGraph()
+    R.add_node(0, bipartite=1, tag="erase")
+    R.add_node(1, bipartite=1, tag="erase")
+    R.add_node(2, bipartite=0, tag=0)
+    R.add_node(3, bipartite=0, tag=1)
+    R.add_edge(0, 2, key=0)
+    R.add_edge(1, 3, key=0)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_node(2, bipartite=1)
+    B.add_node(3, bipartite=1)
+    B.add_edge(0, 2, key=0)
+    B.add_edge(1, 3, key=0)
+    return R, B
+
+def inet_eradup_rule_L():
+    L = nx.MultiDiGraph()
+    L.add_node(0, bipartite=1, tag="erase")
+    L.add_node(1, bipartite=1, tag="duplicate")
+    L.add_node(2, bipartite=0)
+    L.add_node(3, bipartite=0, tag=0)
+    L.add_node(4, bipartite=0, tag=1)
+    L.add_edge(0, 2, key=0)
+    L.add_edge(1, 2, key=0)
+    L.add_edge(3, 1, key=1)
+    L.add_edge(4, 1, key=2)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_edge(0, 3, key=1)
+    B.add_edge(1, 4, key=2)
+    return L, B
+
+def inet_eradup_rule_R():
+    R = nx.MultiDiGraph()
+    R.add_node(0, bipartite=1, tag="erase")
+    R.add_node(1, bipartite=1, tag="erase")
+    R.add_node(2, bipartite=0, tag=0)
+    R.add_node(3, bipartite=0, tag=1)
+    R.add_edge(0, 2, key=0)
+    R.add_edge(1, 3, key=0)
+    B = nx.MultiDiGraph()
+    B.add_node(0, bipartite=1)
+    B.add_node(1, bipartite=1)
+    B.add_node(2, bipartite=1)
+    B.add_node(3, bipartite=1)
+    B.add_edge(0, 2, key=0)
+    B.add_edge(1, 3, key=0)
+    return R, B
+
+def inet_eraera_rule_L():
+    L = nx.MultiDiGraph()
+    L.add_node(0, bipartite=1, tag="erase")
+    L.add_node(1, bipartite=1, tag="erase")
+    L.add_node(2, bipartite=0)
+    L.add_edge(0, 2, key=0)
+    L.add_edge(1, 2, key=0)
+    B = nx.MultiDiGraph()
+    return L, B
+
+def inet_eraera_rule_R():
+    R = nx.MultiDiGraph()
+    B = nx.MultiDiGraph()
     return R, B
 
 
@@ -155,3 +282,21 @@ def test_condup():
     K = dpo_invariant(G, L, R)
     G = dpo_rewrite(G, L, R, K)
     assert len(G.edges) == 10
+
+    L = inet_dupdup_rule_L()
+    R = inet_dupdup_rule_R()
+    K = dpo_invariant(G, L, R)
+    G = dpo_rewrite(G, L, R, K)
+    assert len(G.edges) == 4
+
+    L = inet_eracon_rule_L()
+    R = inet_eracon_rule_R()
+    K = dpo_invariant(G, L, R)
+    G = dpo_rewrite(G, L, R, K)
+    assert len(G.edges) == 2
+
+    L = inet_eraera_rule_L()
+    R = inet_eraera_rule_R()
+    K = dpo_invariant(G, L, R)
+    G = dpo_rewrite(G, L, R, K)
+    assert len(G.edges) == 0
