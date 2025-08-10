@@ -54,7 +54,9 @@ def dpo_rewrite(G: nx.MultiDiGraph, L: nx.MultiDiGraph, R: nx.MultiDiGraph, K: n
         # shift all R ids by n
         R_mapping = {r: r+n for r in R_sub.nodes()}
         R_sub = nx.relabel_nodes(R_sub, R_mapping)
-        C.update(R_sub)
+        C.update(
+            R_sub.edges(keys=True, data=True),
+            R_sub.nodes(data=True))
 
         for i in range(len(L_boundary.edges)):
             wire_boundary_i = i
