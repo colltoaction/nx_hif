@@ -1,62 +1,76 @@
+from itertools import chain
 import networkx as nx
 
 
-def hif_nodes(G: nx.MultiDiGraph, data=False):
-    for e, d in G.nodes(data=True):
-        if d["bipartite"] == 0:
-            yield e, d if data else e
+type HyperGraph = tuple[nx.MultiDiGraph, nx.MultiDiGraph, nx.MultiGraph]
+"""
+A hypergraph is a system H = (V,E,I) where
+V = {v} is a finite, non empty set of vertices or nodes,
+E = {e} is a finite, non-empty set of edges or hyperedges, and
+I ⊆ VxE is a set of incidences, that is, pairs (v,e) of nodes and edges.
+"""
 
-def hif_edges(G: nx.MultiDiGraph, data=False):
-    for e, d in G.nodes(data=True):
-        if d["bipartite"] == 1:
-            yield e, d if data else e
 
-def hif_edge_nodes(G: nx.MultiDiGraph, edge, data=False):
-    for e in G.in_edges(edge, keys=True, data=data):
-        yield (e[1], e[0], "tail",) + e[2:]
-    for e in G.out_edges(edge, keys=True, data=data):
-        yield (e[0], e[1], "head",) + e[2:]
+def hif_create(**I_attrs) -> HyperGraph:
+    V = nx.MultiDiGraph(incidence_pair_index=0)
+    E = nx.MultiDiGraph(incidence_pair_index=1)
+    I = nx.MultiGraph(**I_attrs)
+    return V, E, I
 
-def hif_incidences(G: nx.MultiDiGraph, edge=None, node=None, direction=None, key=None, data=False):
-    # TODO search attributes because ids are not preserved
+def hif_nodes(G: HyperGraph, data=False):
+    V, _, _ = G
+    return V.nodes(data=data)
+
+def hif_edges(G: HyperGraph, data=False):
+    _, E, _ = G
+    return E.nodes(data=data)
+
+def hif_edge_nodes(G: HyperGraph, edge):
+    """
+    An edge e ∈ E can be mapped to the collection of vertices with which it has an
+    incidence: e → {v ∈ V : (v,e) ∈ I}
+    """
+    _, E, I = G
+    return (n for n, _ in I.neighbors((edge, E.graph["incidence_pair_index"])))
+
+def hif_incidences(G: HyperGraph, edge=None, node=None, direction=None, key=None, data=False):
+    V, E, I = G
+    edges = []
+    nodes = []
     if edge is not None:
-        assert G.nodes[edge]["bipartite"] == 1
-        edges = [edge]
+        edges = [(edge, E.graph["incidence_pair_index"])]
     else:
-        edges = hif_edges(G)
+        edges = ((e, E.graph["incidence_pair_index"]) for e in E)
 
     if node is not None:
-        assert G.nodes[node]["bipartite"] == 0
-
-    for e0 in edges:
-        for e in hif_edge_nodes(G, e0, data=data):
-            if node is None or node == e[1]:
-                if direction is None or direction == e[2]:
-                    if key is None or key == e[3]:
-                        yield e
-
-def hif_add_edge(G, edge, **attr):
-    if not G.has_node(edge):
-        G.add_node(("edge", edge), bipartite=1)
-    attr["edge"] = edge
-    for attr_key, attr_value in attr.items():
-        G.nodes[("edge", edge)][attr_key] = attr_value
-
-def hif_add_node(G, node, **attr):
-    if not G.has_node(node):
-        G.add_node(("node", node), bipartite=0)
-    attr["node"] = node
-    for attr_key, attr_value in attr.items():
-        G.nodes[("node", node)][attr_key] = attr_value
-
-def hif_add_incidence(G: nx.MultiDiGraph, edge, node, direction, key, **attr):
-    if not G.has_node(edge):
-        G.add_node(("edge", edge), bipartite=1, edge=edge)
-    if not G.has_node(node):
-        G.add_node(("node", node), bipartite=0, node=node)
-    attr["edge"] = edge
-    attr["node"] = node
-    if direction == "tail":
-        G.add_edge(("node", node), ("edge", edge), key, **attr)
+        nodes = [(node, V.graph["incidence_pair_index"])]
     else:
-        G.add_edge(("edge", edge), ("node", node), key, **attr)
+        nodes = ((n, V.graph["incidence_pair_index"]) for n in V)
+
+    return I.edges(chain(edges, nodes), data=data, keys=True)
+
+def hif_add_edge(G: HyperGraph, edge, **attr):
+    _, E, I = G
+    E.add_node(edge, **attr)
+    I.add_node((edge, E.graph["incidence_pair_index"]))
+
+def hif_add_node(G: HyperGraph, node, **attr):
+    V, _, I = G
+    V.add_node(node, **attr)
+    I.add_node((node, V.graph["incidence_pair_index"]))
+
+def hif_add_incidence(G: HyperGraph, edge, node, direction, key, **attr):
+    V, E, I = G
+    I.add_edge(
+        (edge, E.graph["incidence_pair_index"]),
+        (node, V.graph["incidence_pair_index"]),
+        key=key, direction=direction, **attr)
+    if not E.has_node(edge):
+        E.add_node(edge)
+    if not V.has_node(node):
+        V.add_node(node)
+
+def hif_dualize(G: HyperGraph):
+    V, E, _ = G
+    V.graph["incidence_pair_index"], E.graph["incidence_pair_index"] = \
+        E.graph["incidence_pair_index"], V.graph["incidence_pair_index"]

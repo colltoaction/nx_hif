@@ -1,23 +1,22 @@
 {
   "incidences": [
     {
-      "direction": "tail",
       "edge": 0,
       "node": 4,
       "attrs": {
         "key": 1
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "tail",
       "edge": 0,
       "node": 4,
       "attrs": {
         "key": 2
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "head",
       "edge": 0,
       "node": 5,
       "attrs": {
@@ -26,23 +25,22 @@
       }
     },
     {
-      "direction": "tail",
       "edge": 1,
       "node": 6,
       "attrs": {
         "key": 1
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "tail",
       "edge": 1,
       "node": 7,
       "attrs": {
         "key": 2
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "head",
       "edge": 1,
       "node": 5,
       "attrs": {
@@ -51,23 +49,22 @@
       }
     },
     {
-      "direction": "tail",
       "edge": 2,
       "node": 6,
       "attrs": {
         "key": 1
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "tail",
       "edge": 2,
       "node": 8,
       "attrs": {
         "key": 2
-      }
+      },
+      "direction": "tail"
     },
     {
-      "direction": "head",
       "edge": 2,
       "node": 7,
       "attrs": {
@@ -76,7 +73,6 @@
       }
     },
     {
-      "direction": "head",
       "edge": 3,
       "node": 8,
       "attrs": {
