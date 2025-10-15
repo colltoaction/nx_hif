@@ -72,3 +72,15 @@ def hif_dualize(G: HyperGraph):
     V, E, _ = G
     V.graph["incidence_pair_index"], E.graph["incidence_pair_index"] = \
         E.graph["incidence_pair_index"], V.graph["incidence_pair_index"]
+
+def hif_s_closeness_centrality(G: HyperGraph, s: int):
+    """
+    See "Hypernetwork science via high-order hypergraph walks":
+    https://doi.org/10.1140/epjds/s13688-020-00231-0
+    """
+    # TODO generalize s
+    assert s == 1
+    _, E, I = G
+    spl = tuple((u, v) for (u, t), v in nx.shortest_path_length(I) if t == E.graph["incidence_pair_index"])
+    scc = {u: ((len(spl) - 1) / sum(b/2 for (a, t), b in v.items() if t == E.graph["incidence_pair_index"])) for u, v in spl}
+    return scc
