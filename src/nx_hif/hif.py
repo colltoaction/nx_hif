@@ -65,10 +65,8 @@ def hif_add_incidence(G: HyperGraph, edge, node, direction, key, **attr):
         (edge, E.graph["incidence_pair_index"]),
         (node, V.graph["incidence_pair_index"]),
         key=key, direction=direction, **attr)
-    if not E.has_node(edge):
-        E.add_node(edge)
-    if not V.has_node(node):
-        V.add_node(node)
+    E.add_node(edge)
+    V.add_node(node)
 
 def hif_dualize(G: HyperGraph):
     V, E, _ = G
