@@ -4,8 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nx_hif"
-version = "0.0.8"
-description = "HIF for NetworkX"
+version = "0.0.9"
+description = "Higher-order networks for NetworkX using HIF"
+readme = "README.md"
 dependencies = [
   "networkx",
 ]

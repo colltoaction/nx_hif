@@ -17,21 +17,50 @@ def hif_create(**I_attrs) -> HyperGraph:
     I = nx.MultiGraph(**I_attrs)
     return V, E, I
 
+def hif_node(G: HyperGraph, node):
+    V, _, _ = G
+    return V.nodes[node]
+
+def hif_edge(G: HyperGraph, edge):
+    _, E, _ = G
+    return E.nodes[edge]
+
+def hif_incidence(G: HyperGraph, edge, node, key=0):
+    V, E, I = G
+    return I.edges[
+        (edge, E.graph["incidence_pair_index"]),
+        (node, V.graph["incidence_pair_index"]),
+        key]
+
 def hif_nodes(G: HyperGraph, data=False):
     V, _, _ = G
     return V.nodes(data=data)
+
+def hif_number_of_all(G: HyperGraph):
+    V, E, _ = G
+    return V.number_of_nodes() + E.number_of_nodes()
 
 def hif_edges(G: HyperGraph, data=False):
     _, E, _ = G
     return E.nodes(data=data)
 
-def hif_edge_nodes(G: HyperGraph, edge):
+def hif_edge_nodes(G: HyperGraph, edge, direction="head"):
     """
     An edge e ∈ E can be mapped to the collection of vertices with which it has an
     incidence: e → {v ∈ V : (v,e) ∈ I}
     """
     _, E, I = G
-    return (n for n, _ in I.neighbors((edge, E.graph["incidence_pair_index"])))
+    ekey = (edge, E.graph["incidence_pair_index"])
+    return (n[0] if e == ekey else e[0]
+            for e, n, d in I.edges(ekey, data=True)
+            if d["direction"] == direction)
+
+def hif_node_edges(G: HyperGraph, node, direction="head"):
+    V, _, I = G
+    nkey = (node, V.graph["incidence_pair_index"])
+    return (e[0] if n == nkey else n[0]
+            for e, n, d in I.edges(nkey, data=True)
+            if d["direction"] == direction)
 
 def hif_incidences(G: HyperGraph, edge=None, node=None, direction=None, key=None, data=False):
     V, E, I = G
@@ -59,7 +88,7 @@ def hif_add_node(G: HyperGraph, node, **attr):
     V.add_node(node, **attr)
     I.add_node((node, V.graph["incidence_pair_index"]))
 
-def hif_add_incidence(G: HyperGraph, edge, node, direction, key, **attr):
+def hif_add_incidence(G: HyperGraph, edge, node, direction="head", key=0, **attr):
     V, E, I = G
     I.add_edge(
         (edge, E.graph["incidence_pair_index"]),
