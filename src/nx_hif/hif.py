@@ -26,6 +26,7 @@ def hif_edge(G: HyperGraph, edge):
     return E.nodes[edge]
 
 def hif_incidence(G: HyperGraph, edge, node, key=0):
+    # TODO encapsulate tupling with incidence_pair_index
     V, E, I = G
     return I.edges[
         (edge, E.graph["incidence_pair_index"]),
@@ -62,7 +63,31 @@ def hif_node_edges(G: HyperGraph, node, direction="head"):
             for e, n, d in I.edges(nkey, data=True)
             if d["direction"] == direction)
 
-def hif_incidences(G: HyperGraph, edge=None, node=None, direction=None, key=None, data=False):
+def hif_node_incidences(G: HyperGraph, node, direction="head", key=0, **attr):
+    V, _, I = G
+    n = (node, V.graph["incidence_pair_index"])
+    for (ee0, ee1, k, d) in I.edges(n, data=True, keys=True):
+        if key != k or d["direction"] != direction:
+            continue
+        if ee0[1] == V.graph["incidence_pair_index"]:
+            e, n = ee1[0], ee0[0]
+        else:
+            e, n = ee0[0], ee1[0]
+        yield e, n, k, d
+
+def hif_edge_incidences(G: HyperGraph, edge, direction="head", key=0):
+    _, E, I = G
+    e = (edge, E.graph["incidence_pair_index"])
+    for (ee0, ee1, k, d) in I.edges(e, data=True, keys=True):
+        if key != k or d["direction"] != direction:
+            continue
+        if ee0[1] == E.graph["incidence_pair_index"]:
+            e, n = ee0[0], ee1[0]
+        else:
+            e, n = ee1[0], ee0[0]
+        yield e, n, k, d
+
+def hif_incidences(G: HyperGraph, edge=None, node=None, direction="head", key=0, data=False):
     V, E, I = G
     edges = []
     nodes = []
