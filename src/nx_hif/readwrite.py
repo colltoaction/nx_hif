@@ -14,52 +14,92 @@ def encode_hif_data(G: HyperGraph):
     incidences = []
     edges = []
     nodes = []
+
+    # Sort incidences for deterministic output, though not strictly required by JSON
+    # We can't easily sort without converting to list first
+
     for u, v, k, a in hif_incidences(G, data=True):
         a = a.copy()
         if u[1] == V.graph["incidence_pair_index"]:
             u, v = v[0], u[0]
         else:
             u, v = u[0], v[0]
+
         direction = a.pop("direction", "head")
-        # TODO multi-incidence is not part of the HIF standard
-        incidence = {"edge": u, "node": v, "attrs": {"key": k, **a}}
+
+        incidence = {"edge": u, "node": v}
+
+        # Handle weight
+        if "weight" in a:
+            incidence["weight"] = a.pop("weight")
+
         if direction != "head":
             incidence["direction"] = direction
+
+        # Filter out internal key if it exists in attrs (it shouldn't be in 'a' usually as it's passed as k, but check)
+        a.pop("key", None)
+
+        # Only add attrs if not empty
+        if a:
+            incidence["attrs"] = a
+
         incidences.append(incidence)
+
     for u, d in hif_nodes(G, data=True):
         a = d.copy()
-        u_in_I = (u, V.graph["incidence_pair_index"])
-        if len(a) > 0 or u_in_I not in I:
-            node = {"node": u, "attrs": a}
-            nodes.append(node)
+        node = {"node": u}
+        if "weight" in a:
+            node["weight"] = a.pop("weight")
+        if a:
+            node["attrs"] = a
+        nodes.append(node)
+
     for u, d in hif_edges(G, data=True):
         a = d.copy()
-        u_in_I = (u, E.graph["incidence_pair_index"])
-        if len(a) > 0 or u_in_I not in I:
-            edge = {"edge": u, "attrs": a}
-            edges.append(edge)
-    return {"incidences": incidences, "edges": edges, "nodes": nodes}
+        edge = {"edge": u}
+        if "weight" in a:
+            edge["weight"] = a.pop("weight")
+        if a:
+            edge["attrs"] = a
+        edges.append(edge)
+
+    # Metadata and network-type should be retrieved from I (where hif_create puts them)
+    metadata = {k: v for k, v in I.graph.items() if k != "incidence_pair_index"}
+    # Pop 'network-type' if present in metadata, to set it top-level
+    network_type = metadata.pop("network-type", None)
+
+    result = {
+        "metadata": metadata,
+        "incidences": incidences,
+        "nodes": nodes,
+        "edges": edges
+    }
+
+    if network_type:
+        result["network-type"] = network_type
+
+    return result
 
 def add_incidence(G: HyperGraph, incidence):
-    attrs = incidence.get("attrs", {})
+    attrs = incidence.get("attrs", {}).copy() # Make sure we don't modify the input dict if reused
     edge_id = incidence["edge"]
     node_id = incidence["node"]
     direction = incidence.get("direction", "head")
-    # TODO multi-incidence is not part of the HIF standard
-    key = attrs.pop("key", 0)
+    # Use None for key to allow duplicates (multigraph behavior) unless key is specified
+    key = attrs.pop("key", None)
     if "weight" in incidence:
         attrs["weight"] = incidence["weight"]
     hif_add_incidence(G, edge_id, node_id, direction, key, **attrs)
 
 def add_edge(G: HyperGraph, edge):
-    attrs = edge.get("attrs", {})
+    attrs = edge.get("attrs", {}).copy()
     edge_id = edge["edge"]
     if "weight" in edge:
         attrs["weight"] = edge["weight"]
     hif_add_edge(G, edge_id, **attrs)
 
 def add_node(G: HyperGraph, node):
-    attrs = node.get("attrs", {})
+    attrs = node.get("attrs", {}).copy()
     node_id = node["node"]
     if "weight" in node:
         attrs["weight"] = node["weight"]
