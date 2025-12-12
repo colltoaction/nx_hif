@@ -108,10 +108,22 @@ def hif_add_edge(G: HyperGraph, edge, **attr):
     E.add_node(edge, **attr)
     I.add_node((edge, E.graph["incidence_pair_index"]))
 
+def hif_new_edge(G: HyperGraph, **attr):
+    _, E, I = G
+    edge = E.number_of_nodes()
+    hif_add_edge(G, edge, **attr)
+    return edge
+
 def hif_add_node(G: HyperGraph, node, **attr):
     V, _, I = G
     V.add_node(node, **attr)
     I.add_node((node, V.graph["incidence_pair_index"]))
+
+def hif_new_node(G: HyperGraph, **attr):
+    V, _, I = G
+    node = V.number_of_nodes()
+    hif_add_node(G, node, **attr)
+    return node
 
 def hif_add_incidence(G: HyperGraph, edge, node, direction="head", key=0, **attr):
     V, E, I = G
