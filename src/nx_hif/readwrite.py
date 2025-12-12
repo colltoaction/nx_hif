@@ -41,7 +41,7 @@ def encode_hif_data(G: HyperGraph):
     return {"incidences": incidences, "edges": edges, "nodes": nodes}
 
 def add_incidence(G: HyperGraph, incidence):
-    attrs = incidence.get("attrs", {})
+    attrs = incidence.get("attrs", {}).copy()
     edge_id = incidence["edge"]
     node_id = incidence["node"]
     direction = incidence.get("direction", "head")
