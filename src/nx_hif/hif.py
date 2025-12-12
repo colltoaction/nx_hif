@@ -17,6 +17,18 @@ def hif_create(**I_attrs) -> HyperGraph:
     I = nx.MultiGraph(**I_attrs)
     return V, E, I
 
+def hif_new_edge(G: HyperGraph, **attr):
+    _, E, _ = G
+    edge = E.number_of_nodes()
+    hif_add_edge(G, edge, **attr)
+    return edge
+
+def hif_new_node(G: HyperGraph, **attr):
+    V, _, _ = G
+    node = V.number_of_nodes()
+    hif_add_node(G, node, **attr)
+    return node
+
 def hif_node(G: HyperGraph, node):
     V, _, _ = G
     return V.nodes[node]
@@ -104,11 +116,13 @@ def hif_incidences(G: HyperGraph, edge=None, node=None, direction="head", key=0,
     return I.edges(chain(edges, nodes), data=data, keys=True)
 
 def hif_add_edge(G: HyperGraph, edge, **attr):
+    """Adds an edge with a specific ID. See also: hif_new_edge."""
     _, E, I = G
     E.add_node(edge, **attr)
     I.add_node((edge, E.graph["incidence_pair_index"]))
 
 def hif_add_node(G: HyperGraph, node, **attr):
+    """Adds a node with a specific ID. See also: hif_new_node."""
     V, _, I = G
     V.add_node(node, **attr)
     I.add_node((node, V.graph["incidence_pair_index"]))
